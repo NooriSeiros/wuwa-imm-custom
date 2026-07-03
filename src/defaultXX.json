@@ -1,0 +1,17 @@
+{
+	"version": "3.1.0",
+	"game": "",
+	"custom": 0,
+	"sourceDir": "",
+	"targetDir": "",
+	"settings": {
+		"launch": 0,
+		"hotReload": 1,
+		"onlineType": "Mod",
+		"customCategories": {}
+	},
+	"data": {},
+	"presets": [],
+	"categories": [],
+	"updatedAt": 1760002867805
+}

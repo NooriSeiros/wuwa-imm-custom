@@ -1,0 +1,4 @@
+config*.json
+mod-source-index*.json
+.backups/*
+.backups

@@ -1,0 +1,73 @@
+{
+	"$schema": "https://schema.tauri.app/config/2",
+	"productName": "WuWa IMM Custom",
+	"version": "3.1.0",
+	"identifier": "com.nooriseiros.wuwa-imm-custom",
+	"build": {
+		"beforeDevCommand": "npm run dev",
+		"devUrl": "http://localhost:1420",
+		"beforeBuildCommand": "npm run build",
+		"frontendDist": "../dist"
+	},
+	"app": {
+		"trayIcon": {
+			"iconPath": "icons/imm.ico",
+			"iconAsTemplate": false
+		},
+		"windows": [
+			{
+				"title": "WuWa IMM Custom",
+				"resizable": true,
+				"fullscreen": false,
+				"decorations": false,
+				"transparent": true,
+				"minWidth": 1080,
+				"minHeight": 720,
+				"dragDropEnabled": false
+			}
+		],
+		"security": {
+			"csp": null,
+			"assetProtocol": {
+				"enable": true,
+				"scope": [
+					"**"
+				]
+			},
+			"capabilities": [
+				"default"
+			]
+		},
+		"withGlobalTauri": false
+	},
+	"bundle": {
+		"createUpdaterArtifacts": false,
+		"active": true,
+		"targets": "nsis",
+		"icon": [
+			"icons/128x128.png",
+			"icons/icon.icns",
+			"icons/imm.ico"
+		],
+		"windows": {
+			"nsis": {
+				"installerIcon": "icons/imm.ico"
+			}
+		},
+		"resources": [
+			"ext/*"
+		]
+	},
+	"plugins": {
+		"deep-link": {
+			"desktop": {
+				"schemes": [
+					"wuwa-imm-custom"
+				]
+			}
+		},
+		"fs": {
+			"requireLiteralLeadingDot": false
+		}
+	}
+}
