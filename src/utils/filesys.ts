@@ -112,6 +112,16 @@ store.sub(TARGET, () => {
 	tgt = store.get(TARGET);
 });
 let catDB: MiniSearch | null = null;
+const INTERNAL_CATEGORY_FILES = new Set([".imm-collision-checklist", "settings.json"]);
+
+function resolveKnownCategory(name: string) {
+	const normalizedName = name.trim().toLowerCase();
+	const exact = [...store.get(CATEGORIES), ...LOCAL_SPECIAL_CATEGORIES, { _sName: UNCATEGORIZED, _sIconUrl: "" }].find(
+		(category) => category._sName.trim().toLowerCase() === normalizedName
+	);
+	return exact || catDB?.search(name, { prefix: true, fuzzy: 0.2 })[0];
+}
+
 store.sub(CATEGORIES, () => {
 	try {
 		const categories = store.get(CATEGORIES) || [];
@@ -526,13 +536,16 @@ export async function categorizeDir(src: string, modifyIni = false) {
 	}
 
 	try {
-		const categories = [...store.get(CATEGORIES), { _sName: UNCATEGORIZED }].map((cat) => cat._sName);
+		const categories = [...store.get(CATEGORIES), ...LOCAL_SPECIAL_CATEGORIES, { _sName: UNCATEGORIZED }].map(
+			(cat) => cat._sName
+		);
 
 		const reqCategories: Record<string, Array<{ name: string; isDirectory: boolean }>> = {};
 		const entries = await readDir(src);
 		const ignore = [IGNORE, managedSRC, managedTGT, RESTORE, PREFS];
 		let fullDirectoryRenames: string[] = []; // First pass: categorize items
 		for (const item of entries) {
+			if (!item.isDirectory && INTERNAL_CATEGORY_FILES.has(item.name.toLowerCase())) continue;
 			if (item.isDirectory && ignore.includes(item.name)) continue;
 			if (item.name === OLD_RESTORE) {
 				if (modifyIni) continue;
@@ -547,7 +560,7 @@ export async function categorizeDir(src: string, modifyIni = false) {
 				fullDirectoryRenames.push(item.name);
 				continue;
 			}
-			const category = catDB?.search(item.name, { prefix: true, fuzzy: 0.2 })[0]?._sName || UNCATEGORIZED;
+			const category = resolveKnownCategory(item.name)?._sName || UNCATEGORIZED;
 			// categories.find((cat: string) =>
 			// 	cat
 			// 		.toLowerCase()
@@ -730,7 +743,7 @@ export async function verifyDirStruct() {
 	const readPromises: Promise<{ item: any; entries: any[] }>[] = [];
 	for (const item of before) {
 		const category =
-			catDB?.search(item.name, { prefix: true, fuzzy: 0.2 })[0] ||
+			resolveKnownCategory(item.name) ||
 				(item.name === RESTORE || item.name === OLD_RESTORE
 					? { _sName: RESTORE, _sIconUrl: "" }
 					: { _sName: UNCATEGORIZED, _sIconUrl: "" });
@@ -789,7 +802,7 @@ export async function verifyDirStruct() {
 					const category =
 						item.name === RESTORE
 							? { _sName: RESTORE, _sIconUrl: "" }
-							: catDB?.search(item.name, { prefix: true, fuzzy: 0.2 })[0] || { _sName: UNCATEGORIZED, _sIconUrl: "" };
+							: resolveKnownCategory(item.name) || { _sName: UNCATEGORIZED, _sIconUrl: "" };
 
 					if (category) {
 						modDirReadPromises.push(
@@ -1347,7 +1360,10 @@ export async function refreshModList() {
 					}
 					return entry;
 				})
-				.filter((entry) => entry !== null && entry.depth < 2 && entry.name != ".imm-collision-checklist") as Mod[]
+				.filter(
+					(entry) =>
+						entry !== null && entry.depth < 2 && !INTERNAL_CATEGORY_FILES.has(entry.name.toLowerCase())
+				) as Mod[]
 		).sort(sortMods);
 
 		// const entries = (await readDirRecr(modSrc, "", 2))
